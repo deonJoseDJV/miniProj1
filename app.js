@@ -101,8 +101,7 @@ app.post("/listings",validateListing,
         //     throw new ExpressErrir(400,result.error);
         // }
         const newListing=new Listing(req.body.listing);
-        let resu=await newListing.save();
-        console.log(resu);
+        await newListing.save();
 
         res.redirect("/listings");   
     }   
