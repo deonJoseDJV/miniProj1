@@ -8,24 +8,19 @@ const methodOverride=require("method-override")
 const ejsMate=require("ejs-mate");
 // const wrapAsync=require("./utils/wrapAsync.js");
 const ExpressError=require("./utils/ExpressError.js");
+const flash=require("connect-flash");
 //for server side validation
 // const {listingSchema,reviewSchema}=require("./schema.js");
 
 // const Review=require("./models/review.js");
 
-const listings=require("./routes/listing.js");
-const reviews=require("./routes/review.js");
-
-
-app.set("view engine","ejs");
-app.set("views",path.join(__dirname,"views"));
-app.use(express.static(path.join(__dirname,"public")));
-app.use(express.json());
-app.use(express.urlencoded({extended:true}));
-app.use(methodOverride("_method"))
-app.engine("ejs",ejsMate);
-
-
+const listingRouter=require("./routes/listing.js");
+const reviewRouter=require("./routes/review.js");
+const session = require("express-session");
+const passport=require("passport");
+const LocalStrategy=require("passport-local");
+const User=require("./models/user.js");
+const userRoute=require("./routes/user.js");
 
 //main connection part
 main()
@@ -40,6 +35,49 @@ async function main(){
     await mongoose.connect("mongodb://localhost:27017/wanderlust");
 
 }
+
+
+app.set("view engine","ejs");
+app.set("views",path.join(__dirname,"views"));
+app.use(express.static(path.join(__dirname,"public")));
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));
+app.use(methodOverride("_method"))
+app.engine("ejs",ejsMate);
+
+//for expiry date of the cookie
+//it actually exist for 7 days as set by us 
+//date.now() is the current date and time given in ms;
+const sessionOptions={
+    secret:"mysupersecretcode",
+    resave:false,
+    saveUninitialized:true,
+    cookie:{
+        //to prevetn crossscripting attacks we use httpOnly
+        httpOnly:true,
+        expires:Date.now()+1000*60*60*24*7,
+        maxAge:1000*60*60*24*7
+    }
+}
+
+
+
+//these flashes must be used before the routes as this must be used in it
+app.use(session(sessionOptions));
+app.use(flash());
+
+//for every request we get the passport initialized
+app.use(passport.initialize());
+//same user trying to login again or not checking the session for that
+app.use(passport.session());
+//to make the login and logout work
+passport.use(new LocalStrategy(User.authenticate()));
+
+//static one to serialize and deserialize the user
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
 //till here
 
 //for the server side validation part
@@ -70,11 +108,32 @@ async function main(){
 //     }
 // }
 
+app.use((req,res,next)=>{
+    res.locals.success=req.flash("success");
+    res.locals.error=req.flash("error");
+    res.locals.currUser=req.user;
+    // res.locals.error=req.flash("error");
+    
+    next();
+});
+
+// app.get("/demouser",async(req,res)=>{
+//     let fakeUser=new User({
+//         email:"student@gmail.com",
+//         username:"delta-student"
+//     })
+//     //helloworld is the password
+//     //this is the password that we are using to register the user
+//     let registeredUser=await User.register(fakeUser,"helloworld");
+//     res.send(registeredUser);
+// });
 //instead of all the routes in app.js
 //we can use the routes in a separate file
-app.use("/listings",listings);
+app.use("/listings",listingRouter);
 
-app.use("/listings/:id/reviews",reviews);
+app.use("/listings/:id/reviews",reviewRouter);
+
+app.use("/",userRoute);
 
 
 // app.get("/",(req,res)=>{
