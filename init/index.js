@@ -20,6 +20,7 @@ const initDB=async()=>{
     //first we clear the database, then insert the data
     await Listing.deleteMany({});
     //  module.exports = { data: sampleListings };
+    initData.data=initData.data.map((obj)=>({...obj, owner:"6809bbf4de88d4f25c55c48c"}));
     await Listing.insertMany(initData.data);
     console.log("Data inserted");
 };
