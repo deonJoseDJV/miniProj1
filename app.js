@@ -1,3 +1,12 @@
+
+if (process.env.NODE_ENV != "production") {
+    // console.log("Development mode");
+    require("dotenv").config();
+}
+
+// console.log(process.env.SECRET);
+
+
 const express=require("express");
 const app=express();
 const mongoose=require("mongoose");
@@ -21,6 +30,9 @@ const passport=require("passport");
 const LocalStrategy=require("passport-local");
 const User=require("./models/user.js");
 const userRoute=require("./routes/user.js");
+
+
+
 
 //main connection part
 main()

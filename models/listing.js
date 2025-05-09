@@ -12,10 +12,8 @@ const listingSchema=new mongoose.Schema({
     
     image: {
        
-            type: String,
-            required: true,
-            default: "https://images.unsplash.com/photo-1742943679521-f4736500a471?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwyfHx8ZW58MHx8fHx8", // Set default image URL
-        
+           url:String,
+           filename:String,
     },
 
     // image:String,
@@ -33,6 +31,17 @@ const listingSchema=new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:"User"
     },
+    geometry:{
+        type:{
+            type:String,
+            enum:["Point"],
+            required:true
+        },
+        coordinates:{
+            type:[Number],
+            required:true
+        }
+    }
 });
 
 //a post middleware is used to delete the reviews when the listing is deleted
