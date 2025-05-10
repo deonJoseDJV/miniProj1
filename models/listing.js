@@ -42,6 +42,13 @@ const listingSchema=new mongoose.Schema({
             required:true
         }
     }
+    //try to add category and thing is that on clicking the categories; we must redirect to the forms of that
+    //particular category
+    // category:{
+    //     type:String,
+    //     enum:["Camping","Farms","Arctic","Mountains","Iconic cities"],
+    //     required:true
+    // }
 });
 
 //a post middleware is used to delete the reviews when the listing is deleted

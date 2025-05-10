@@ -1,38 +1,35 @@
 
 if (process.env.NODE_ENV != "production") {
-    // console.log("Development mode");
+  
     require("dotenv").config();
 }
 
-// console.log(process.env.SECRET);
+
 
 
 const express=require("express");
 const app=express();
 const mongoose=require("mongoose");
-// const Listing=require("./models/listing.js");
+
 const path=require("path");
 const ejs=require("ejs");
 const methodOverride=require("method-override")
 const ejsMate=require("ejs-mate");
-// const wrapAsync=require("./utils/wrapAsync.js");
+
 const ExpressError=require("./utils/ExpressError.js");
 const flash=require("connect-flash");
-//for server side validation
-// const {listingSchema,reviewSchema}=require("./schema.js");
-
-// const Review=require("./models/review.js");
 
 const listingRouter=require("./routes/listing.js");
 const reviewRouter=require("./routes/review.js");
 const session = require("express-session");
+const MongoStore=require("connect-mongo");
 const passport=require("passport");
 const LocalStrategy=require("passport-local");
 const User=require("./models/user.js");
 const userRoute=require("./routes/user.js");
 
 
-
+const dbUrl=process.env.ATLASDB_URL;
 
 //main connection part
 main()
@@ -44,7 +41,7 @@ main()
 })
 
 async function main(){
-    await mongoose.connect("mongodb://localhost:27017/wanderlust");
+    await mongoose.connect(dbUrl);
 
 }
 
@@ -57,15 +54,30 @@ app.use(express.urlencoded({extended:true}));
 app.use(methodOverride("_method"))
 app.engine("ejs",ejsMate);
 
+
+const store=MongoStore.create({
+    mongoUrl:dbUrl,
+    crypto:{
+        secret:process.env.SECRET,
+    },
+    touchAfter:24*60*60,
+  
+});
+
+store.on("error",function(e){
+    console.log("Session store error",e);
+});
+
 //for expiry date of the cookie
 //it actually exist for 7 days as set by us 
 //date.now() is the current date and time given in ms;
 const sessionOptions={
-    secret:"mysupersecretcode",
+    store,
+    secret:process.env.SECRET,
     resave:false,
     saveUninitialized:true,
     cookie:{
-        //to prevetn crossscripting attacks we use httpOnly
+        //to prevent crossscripting attacks we use httpOnly
         httpOnly:true,
         expires:Date.now()+1000*60*60*24*7,
         maxAge:1000*60*60*24*7
